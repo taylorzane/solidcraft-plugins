@@ -1,0 +1,5 @@
+{
+  "entry": "helical-gear",
+  "params": { "gear_type": "double-helical", "face_width": 12, "relief_width": 13 },
+  "expect": { "error": "invalid_input", "message": "Center relief width must be at least 0.02 mm smaller than total face width" }
+}

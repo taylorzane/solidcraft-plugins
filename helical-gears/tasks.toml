@@ -1,0 +1,10 @@
+["build:helical-gears"]
+description = "Build the Helical Gears plugin ZIP"
+dir = "helical-gears"
+run = "sh scripts/build.sh"
+
+["test:helical-gears"]
+description = "Test Helical Gears with Rust and SolidCraft"
+dir = "helical-gears"
+depends = ["build:helical-gears"]
+run = "sh scripts/test.sh"

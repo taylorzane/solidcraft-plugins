@@ -1,0 +1,9 @@
+{
+  "entry": "helical-gear",
+  "params": { "gear_type": "herringbone", "component_name": "", "relief_width": 12, "relief_diameter": 999 },
+  "expect": {
+    "reply": { "result": { "name": "Herringbone Gear 1", "teeth": 24, "section_width_mm": 6, "section_twist_deg": 7.1619724391, "relief_width_mm": 0 } },
+    "model": { "body_count": 1, "bodies": [{ "closed": true }], "total": { "volume_mm3": 27999.44 } },
+    "tolerance": 0.0001
+  }
+}

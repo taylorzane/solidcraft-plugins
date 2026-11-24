@@ -1,0 +1,21 @@
+{
+  "entry": "helical-gear",
+  "params": {
+    "gear_type": "helical",
+    "advanced": false,
+    "component_name": "Replacement",
+    "hand": "left",
+    "face_width": 8,
+    "bore_diameter": 0,
+    "tip_diameter": 59,
+    "root_diameter": 51,
+    "root_fillet_radius": 0.3,
+    "normal_tooth_thickness": 2.9,
+    "profile_shift": 0.15,
+    "tooth_phase": 6
+  },
+  "expect": {
+    "reply": { "result": { "name": "Replacement", "tip_diameter_mm": 59, "root_diameter_mm": 51, "normal_tooth_thickness_mm": 2.9, "section_twist_deg": -9.5492965855 } },
+    "model": { "body_count": 1, "bodies": [{ "closed": true }] }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "entry": "helical-gear",
+  "params": { "gear_type": "helical", "bore_diameter": 100 },
+  "expect": { "error": "invalid_input", "message": "Bore must be smaller than the root diameter (<=50.4 mm)" }
+}

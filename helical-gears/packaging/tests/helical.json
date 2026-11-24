@@ -1,0 +1,9 @@
+{
+  "entry": "helical-gear",
+  "params": { "gear_type": "helical", "relief_width": 12 },
+  "expect": {
+    "reply": { "result": { "name": "Helical Gear 1", "teeth": 24, "pitch_diameter_mm": 55.4256258422, "face_width_mm": 12, "bore_diameter_mm": 8, "section_twist_deg": 14.3239448783, "relief_width_mm": 0 } },
+    "model": { "body_count": 1, "bodies": [{ "closed": true }], "total": { "volume_mm3": 27999.44 } },
+    "tolerance": 0.0001
+  }
+}

@@ -1,0 +1,245 @@
+{
+  "id": "helical-gears",
+  "name": "Helical Gears",
+  "version": "0.47.1",
+  "capabilities": [
+    "commands@0.2",
+    "dialog@0.1"
+  ],
+  "runtime": {
+    "module": "helical-gears.wasm",
+    "commands": [
+      "component.list",
+      "component.create",
+      "sketch.create",
+      "sketch.line",
+      "sketch.arc.three_point",
+      "sketch.spline.fit_point",
+      "sketch.pattern.circular",
+      "sketch.circle.center",
+      "sketch.finish",
+      "solid.sweep",
+      "solid.mirror",
+      "solid.extrude",
+      "timeline.rename"
+    ],
+    "entries": [
+      {
+        "name": "helical-gear",
+        "effect": "edit",
+        "input_schema": {
+          "type": "object",
+          "x-solidcraft-icon": "icons/helical-gear.svg",
+          "additionalProperties": false,
+          "required": [
+            "gear_type"
+          ],
+          "properties": {
+            "gear_type": {
+              "type": "string",
+              "title": "Gear type",
+              "default": "helical",
+              "oneOf": [
+                {
+                  "const": "helical",
+                  "title": "Helical"
+                },
+                {
+                  "const": "double-helical",
+                  "title": "Double-Helical"
+                },
+                {
+                  "const": "herringbone",
+                  "title": "Herringbone"
+                }
+              ],
+              "description": "Helical uses one continuous helix\nDouble-Helical has a groove between opposite helices\nHerringbone joins opposite helices at the center"
+            },
+            "create_as": {
+              "type": "string",
+              "title": "Create as",
+              "default": "component",
+              "oneOf": [
+                {
+                  "const": "component",
+                  "title": "New component"
+                },
+                {
+                  "const": "body",
+                  "title": "Body in current component"
+                }
+              ],
+              "description": "New component uses the design origin\nBody in current component uses the active component's origin"
+            },
+            "advanced": {
+              "type": "boolean",
+              "title": "Show advanced settings",
+              "default": false
+            },
+            "component_name": {
+              "type": "string",
+              "title": "Gear name",
+              "maxLength": 64,
+              "default": "",
+              "description": "Leave blank for a numbered name like Helical Gear 1"
+            },
+            "teeth": {
+              "type": "integer",
+              "title": "Tooth count",
+              "default": 24,
+              "minimum": 8,
+              "maximum": 80
+            },
+            "normal_module": {
+              "type": "number",
+              "title": "Tooth size",
+              "default": 2,
+              "minimum": 0.1,
+              "maximum": 100,
+              "unit": "mm",
+              "description": "Normal module sets tooth size and spacing\nMatch the mating gear's normal module"
+            },
+            "normal_pressure_angle": {
+              "type": "number",
+              "title": "Normal pressure angle",
+              "default": 20,
+              "minimum": 10,
+              "maximum": 35,
+              "unit": "°"
+            },
+            "helix_angle": {
+              "type": "number",
+              "title": "Helix angle",
+              "default": 30,
+              "minimum": 0.1,
+              "maximum": 60,
+              "unit": "°",
+              "description": "Measured from the gear axis at the pitch diameter"
+            },
+            "hand": {
+              "type": "string",
+              "title": "Starting helix hand",
+              "default": "right",
+              "oneOf": [
+                {
+                  "const": "right",
+                  "title": "Right"
+                },
+                {
+                  "const": "left",
+                  "title": "Left"
+                }
+              ]
+            },
+            "face_width": {
+              "type": "number",
+              "title": "Total face width",
+              "default": 12,
+              "minimum": 0.05,
+              "maximum": 1000,
+              "unit": "mm",
+              "description": "Includes the center groove on double-helical gears"
+            },
+            "bore_diameter": {
+              "type": "number",
+              "title": "Bore diameter",
+              "default": 8,
+              "minimum": 0,
+              "maximum": 16000,
+              "unit": "mm"
+            },
+            "profile_shift": {
+              "type": "number",
+              "title": "Normal profile shift",
+              "default": 0,
+              "minimum": -1,
+              "maximum": 1,
+              "description": "Adjusts tooth thickness and the tip and root diameters"
+            },
+            "normal_tooth_thickness": {
+              "type": "number",
+              "title": "Normal tooth thickness",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 1000,
+              "unit": "mm",
+              "description": "Arc thickness at the pitch diameter in the normal plane\nEnter 0 to calculate the thickness automatically"
+            },
+            "tip_diameter": {
+              "type": "number",
+              "title": "Tip diameter override",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 17000,
+              "unit": "mm",
+              "description": "Enter 0 to calculate the tip diameter automatically"
+            },
+            "root_diameter": {
+              "type": "number",
+              "title": "Root diameter override",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 16000,
+              "unit": "mm",
+              "description": "Enter 0 to calculate the root diameter automatically"
+            },
+            "root_fillet_radius": {
+              "type": "number",
+              "title": "Transverse root fillet",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 100,
+              "unit": "mm",
+              "description": "Root blend radius measured perpendicular to the gear axis"
+            },
+            "tooth_phase": {
+              "type": "number",
+              "title": "Starting tooth phase",
+              "default": 0,
+              "minimum": -360,
+              "maximum": 360,
+              "unit": "°",
+              "description": "Angle from +X to a tooth center on the starting face"
+            },
+            "relief_width": {
+              "type": "number",
+              "title": "Center relief width",
+              "default": 2,
+              "minimum": 0.01,
+              "maximum": 1000,
+              "unit": "mm",
+              "x-solidcraft-visible-when": {
+                "field": "gear_type",
+                "eq": "double-helical"
+              }
+            },
+            "relief_diameter": {
+              "type": "number",
+              "title": "Center relief diameter",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 16000,
+              "unit": "mm",
+              "description": "Enter 0 to match the root diameter automatically",
+              "x-solidcraft-visible-when": {
+                "field": "gear_type",
+                "eq": "double-helical"
+              }
+            },
+            "validation_message": {
+              "type": "string",
+              "title": "Status",
+              "x-solidcraft-enabled-when": { "any": [] }
+            }
+          }
+        },
+        "dialog_hook": true
+      }
+    ],
+    "limits": {
+      "fuel": 1000000000,
+      "memory_mib": 32,
+      "deadline_ms": 30000
+    }
+  }
+}

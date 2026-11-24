@@ -1,0 +1,15 @@
+[tools]
+bun = "1.4.4"
+rust = { version = "1.99.1", profile = "minimal", targets = ["wasm32-unknown-unknown"], components = ["rustfmt", "clippy"] }
+"cargo:wasm-tools" = { version = "1.263.0", default-features = false, features = ["component"] }
+
+[task_config]
+includes = ["*/tasks.toml"]
+
+[tasks.build]
+description = "Build every plugin ZIP"
+depends = ["build:*"]
+
+[tasks.test]
+description = "Build and test every plugin"
+depends = ["test:*"]
