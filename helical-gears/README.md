@@ -1,10 +1,10 @@
 # Helical Gears for SolidCraft
 
-Generate an external involute helical, double-helical, or herringbone gear as a separate solid. Helical Gears `v0.47.1` was tested with **SolidCraft Desktop 0.47.0**. See the repository's [versioning note](../README.md#versioning).
+Generate an external involute helical, double-helical, or herringbone gear as a separate solid. See the repository's [versioning note](../README.md#versioning) for SolidCraft compatibility.
 
 ## Install and preview
 
-1. Open **Preferences → Plugins → Install plugin…** and select `helical-gears-0.47.1.zip` from [GitHub Releases](https://github.com/taylorzane/solidcraft-plugins/releases) or your local `dist/` directory.
+1. Open **Preferences → Plugins → Install plugin…** and select the `helical-gears-<version>.zip` file from [GitHub Releases](https://github.com/taylorzane/solidcraft-plugins/releases) or your local `dist/` directory.
 2. Open **Model → Plugins → Helical Gears** and select **Helical**, **Double-Helical**, or **Herringbone** in the **Gear type** dropdown. Double-Helical also shows the center relief width.
 3. Under **Create as**, choose **New component** to add a part at the design origin or **Body in current component** to add a separate solid at the active component's origin.
 4. Edit the dimensions with **Preview** checked. The viewport updates when the calculation finishes. **Status** shows the applicable limit or geometry conflict when a setting is invalid. Hover the affected setting for details. Drag the dialog by its title if it covers the gear.
@@ -45,8 +45,10 @@ mise run build:helical-gears
 mise run test:helical-gears
 ```
 
-CI tests use the SolidCraft 0.47.0 CLI and Bun. Set `SOLIDCRAFT_CLI` to the executable's full path if it is outside your `PATH`. The installable ZIP is written to the repository's `dist/` directory.
+`mise run package:helical-gears` also writes the installable ZIP to the repository's `dist/` directory. Tests use the SolidCraft CLI pinned in the [root Cargo manifest](../Cargo.toml). Set `SOLIDCRAFT_CLI` to the executable's full path if it is outside your `PATH`.
 
 Scripts and agents call the `helical-gears.helical-gear` command and pass `gear_type` as `helical`, `double-helical`, or `herringbone`. The optional `create_as` parameter accepts `component` (the default) or `body`.
 
-The ZIP includes the repository's [BSD-3-Clause license](../LICENSE) and the [third-party MIT notices](THIRD-PARTY-LICENSES.txt). The transverse involute implementation adapts equations from [SolidCraft Gears](https://github.com/bherbruck/solidcraft-gears/tree/ebc316cc47b4b87590505b0f9cb61794e8a70a7f). The WIT contract is vendored from [SolidCraft 0.46.0](https://github.com/tangency-labs/solidcraft/blob/v0.46.0/crates/craft-plugin/wit/plugin.wit).
+The ZIP includes the repository's [BSD-3-Clause license](../LICENSE), generated [third-party notices](THIRD-PARTY-LICENSES.txt), and the Rust toolchain's standard library notices. Run `mise run licenses:helical-gears` to refresh the checked-in copy.
+
+The transverse involute implementation adapts equations from [SolidCraft Gears](https://github.com/bherbruck/solidcraft-gears/tree/ebc316cc47b4b87590505b0f9cb61794e8a70a7f). The [shared WIT contract](../wit/plugin.wit) comes from the pinned SolidCraft release.

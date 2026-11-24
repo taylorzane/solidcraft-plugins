@@ -5,7 +5,7 @@ use serde_json::{Map, Value, json};
 use crate::gear::{Curve, Gear};
 use crate::inputs::{CreateAs, GearType, InputError, Inputs};
 
-wit_bindgen::generate!({ path: "wit", world: "command-dialog-plugin" });
+wit_bindgen::generate!({ path: "../wit", world: "command-dialog-plugin" });
 
 use craft::plugin::types::{CommandFailure, FieldFailure, PluginError};
 use craft::plugin::{commands, control};

@@ -8,8 +8,12 @@ includes = ["*/tasks.toml"]
 
 [tasks.build]
 description = "Build every plugin ZIP"
-depends = ["build:*"]
+run = "bun scripts/release.js build"
 
 [tasks.test]
 description = "Build and test every plugin"
-depends = ["test:*"]
+run = "bun scripts/release.js test"
+
+[tasks.licenses]
+description = "Refresh plugin third-party notices"
+depends = ["licenses:*"]

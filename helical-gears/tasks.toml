@@ -1,5 +1,6 @@
 ["build:helical-gears"]
 description = "Build the Helical Gears plugin ZIP"
+alias = "package:helical-gears"
 dir = "helical-gears"
 run = "sh scripts/build.sh"
 
@@ -8,3 +9,8 @@ description = "Test Helical Gears with Rust and SolidCraft"
 dir = "helical-gears"
 depends = ["build:helical-gears"]
 run = "sh scripts/test.sh"
+
+["licenses:helical-gears"]
+description = "Refresh the Helical Gears third-party notices"
+dir = "helical-gears"
+run = "bun scripts/licenses.js"

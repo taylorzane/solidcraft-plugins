@@ -1,7 +1,6 @@
 {
   "id": "helical-gears",
   "name": "Helical Gears",
-  "version": "0.47.1",
   "capabilities": [
     "commands@0.2",
     "dialog@0.1"

@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
-    tags: ['*-v*']
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -21,38 +21,35 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     outputs:
-      archive: ${{ steps.release.outputs.archive }}
-      version: ${{ steps.release.outputs.version }}
+      archives: ${{ steps.archives.outputs.paths }}
+      version: ${{ steps.config.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Match release tag to plugin
-        id: release
-        if: github.event_name == 'push' && github.ref_type == 'tag'
-        run: |
-          shopt -s nullglob
-          for manifest in */packaging/plugin.json; do
-            plugin=${manifest%/packaging/plugin.json}
-            version=$(jq -er --arg id "$plugin" 'select(.id == $id) | .version | strings' "$manifest")
-            if [[ "$GITHUB_REF_NAME" == "$plugin-v$version" ]]; then
-              printf 'task=test:%s\narchive=%s-%s.zip\nversion=%s\n' \
-                "$plugin" "$plugin" "$version" "$version" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-          done
-          printf 'Tag %s must match <plugin-id>-v<version> from a plugin manifest\n' "$GITHUB_REF_NAME" >&2
-          exit 1
-
       - uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
         with:
           version: '2026.11.8'
 
-      - name: Install SolidCraft CLI
+      - name: Read shared release configuration
+        id: config
+        run: |
+          config=$(mise exec -- bun scripts/release.js config)
+          version=$(jq -er '.version' <<< "$config")
+          if [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF_TYPE" == tag && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            printf 'Tag %s must match the workspace release version v%s\n' "$GITHUB_REF_NAME" "$version" >&2
+            exit 1
+          fi
+          cli_version=$(jq -er '.solidcraft_version' <<< "$config")
+          cli_sha256=$(jq -er '.macos_cli_sha256' <<< "$config")
+          printf 'version=%s\ncli_version=%s\ncli_sha256=%s\n' \
+            "$version" "$cli_version" "$cli_sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Verify SolidCraft interface and install CLI
         env:
-          CLI_VERSION: '0.47.0'
-          CLI_SHA256: 6b0a3419e313f45faf7cb4b644c9af6652bb66929e7bec67ccb105e81b2f4758
+          CLI_VERSION: ${{ steps.config.outputs.cli_version }}
+          CLI_SHA256: ${{ steps.config.outputs.cli_sha256 }}
         run: |
           bundle="solidcraft-cli-$CLI_VERSION-macos-universal"
           archive="$RUNNER_TEMP/$bundle.zip"
@@ -62,19 +59,31 @@ jobs:
             --output "$archive"
           printf '%s  %s\n' "$CLI_SHA256" "$archive" | shasum -a 256 -c
           unzip -q "$archive" "$bundle/solidcraft-cli" -d "$RUNNER_TEMP"
-          "$cli" --version
+          mise exec -- bun scripts/release.js check-cli "$cli"
+          upstream_wit="$RUNNER_TEMP/$bundle/plugin.wit"
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://raw.githubusercontent.com/tangency-labs/solidcraft/v$CLI_VERSION/crates/craft-plugin/wit/plugin.wit" \
+            --output "$upstream_wit"
+          if ! cmp -s wit/plugin.wit "$upstream_wit"; then
+            printf 'wit/plugin.wit must match SolidCraft v%s\n' "$CLI_VERSION" >&2
+            exit 1
+          fi
           printf 'SOLIDCRAFT_CLI=%s\n' "$cli" >> "$GITHUB_ENV"
 
-      - name: Run mise tests
-        env:
-          MISE_TASK: ${{ steps.release.outputs.task || 'test' }}
-        run: mise run "$MISE_TASK"
+      - name: Build and test every plugin
+        run: mise run test
+
+      - name: Verify release ZIPs
+        id: archives
+        run: |
+          paths=$(mise exec -- bun scripts/release.js archives)
+          printf '%s\n' 'paths<<PLUGIN_ARCHIVES' "$paths" 'PLUGIN_ARCHIVES' >> "$GITHUB_OUTPUT"
 
       - name: Upload plugin ZIPs
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: plugin-zips
-          path: dist/${{ steps.release.outputs.archive || '*.zip' }}
+          path: ${{ steps.archives.outputs.paths }}
           if-no-files-found: error
           compression-level: 0
 
@@ -93,25 +102,38 @@ jobs:
           name: plugin-zips
           path: dist
 
-      - name: Publish tested ZIP
+      - name: Publish all tested ZIPs
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
-          RELEASE_ASSET: ${{ needs.test.outputs.archive }}
+          RELEASE_ARCHIVES: ${{ needs.test.outputs.archives }}
           RELEASE_VERSION: ${{ needs.test.outputs.version }}
         run: |
-          archive="dist/$RELEASE_ASSET"
-          if ! unzip -p "$archive" plugin.json | jq -e --arg tag "$GITHUB_REF_NAME" \
-            '(.id + "-v" + .version) == $tag' > /dev/null; then
-            printf 'Archive %s does not contain the plugin for tag %s\n' "$archive" "$GITHUB_REF_NAME" >&2
+          if [[ -z "$RELEASE_ARCHIVES" || "$GITHUB_REF_NAME" != "v$RELEASE_VERSION" ]]; then
+            printf 'Missing release ZIPs or version mismatch for tag %s\n' "$GITHUB_REF_NAME" >&2
             exit 1
           fi
+          mapfile -t archives <<< "$RELEASE_ARCHIVES"
+          for archive in "${archives[@]}"; do
+            if ! unzip -p "$archive" plugin.json |
+              jq -e --arg version "$RELEASE_VERSION" --arg file "${archive##*/}" \
+                '.version == $version and (.id + "-" + .version + ".zip") == $file' > /dev/null; then
+              printf 'Archive %s does not match tag %s\n' "$archive" "$GITHUB_REF_NAME" >&2
+              exit 1
+            fi
+          done
 
           if release=$(gh release view "$GITHUB_REF_NAME" --json assets,isDraft 2>/dev/null); then
-            if ! jq -e --arg asset "$RELEASE_ASSET" \
-              'any(.assets[]; .name == $asset and .state == "uploaded")' \
-              <<< "$release" > /dev/null; then
-              gh release upload "$GITHUB_REF_NAME" "$archive"
+            missing=()
+            for archive in "${archives[@]}"; do
+              if ! jq -e --arg asset "${archive##*/}" \
+                'any(.assets[]; .name == $asset and .state == "uploaded")' \
+                <<< "$release" > /dev/null; then
+                missing+=("$archive")
+              fi
+            done
+            if ((${#missing[@]})); then
+              gh release upload "$GITHUB_REF_NAME" "${missing[@]}" --clobber
             fi
             if jq -e '.isDraft' <<< "$release" > /dev/null; then
               gh release edit "$GITHUB_REF_NAME" --draft=false
@@ -121,5 +143,5 @@ jobs:
             if [[ "${RELEASE_VERSION%%+*}" == *-* ]]; then
               flags+=(--prerelease)
             fi
-            gh release create "$GITHUB_REF_NAME" "$archive" "${flags[@]}"
+            gh release create "$GITHUB_REF_NAME" "${archives[@]}" "${flags[@]}"
           fi
